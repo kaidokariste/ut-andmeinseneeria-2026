@@ -8,11 +8,11 @@ Selle praktikumi eesmärk on panna oma arvutis tööle PostgreSQL-andmebaas Dock
 
 Praktikumi lõpuks oskab õppija:
 
-- käivitab `docker compose` abil PostgreSQL-andmebaasi;
-- loob ühenduse andmebaasiga tööriistaga `psql`;
-- loob SQL-iga tabeli;
-- laadib CSV-faili tabelisse käsuga `COPY`;
-- kontrollib SQL-päringuga, et andmed jõudsid tabelisse.
+- käivitada `docker compose` abil PostgreSQL-andmebaasi;
+- luua ühenduse andmebaasiga tööriistaga `psql`;
+- luua SQL-iga tabeli;
+- laadida CSV-faili tabelisse käsuga `COPY`;
+- kontrollida SQL-päringuga, et andmed jõudsid tabelisse.
 
 ## Hinnanguline ajakulu
 
@@ -41,13 +41,13 @@ Dockeri paigaldusjuhendid:
 
 ## Praktikumi failid
 
-- `compose.yml` kirjeldab andmebaasi konteinerit
-- `.env.example` sisaldab ühenduse näidisväärtusi
-- `data/countries.csv` on näidisandmestik
-- `scripts/01_create_countries_table.sql` loob tabeli
-- `scripts/02_load_countries.sql` laadib CSV-faili tabelisse
-- `scripts/03_check_countries.sql` kontrollib tulemust
-- `scripts/99_drop_countries.sql` kustutab tabeli, kui soovid alustada puhtalt lehelt
+- [`compose.yml`](./compose.yml) kirjeldab andmebaasi konteinerit
+- [`.env.example`](./.env.example) sisaldab ühenduse näidisväärtusi
+- [`data/countries.csv`](./data/countries.csv) on näidisandmestik
+- [`scripts/01_create_countries_table.sql`](./scripts/01_create_countries_table.sql) loob tabeli
+- [`scripts/02_load_countries.sql`](./scripts/02_load_countries.sql) laadib CSV-faili tabelisse
+- [`scripts/03_check_countries.sql`](./scripts/03_check_countries.sql) kontrollib tulemust
+- [`scripts/99_drop_countries.sql`](./scripts/99_drop_countries.sql) kustutab tabeli, kui soovid alustada puhtalt lehelt
 
 ## Uued mõisted
 
@@ -97,7 +97,7 @@ See vahe on oluline, sest failitee *on* kummaski kontekstis erinev.
 
 Näide:
 
-- hostis on fail tee all `<kursuse kataloog>/baastase/praktikum-01/data/countries.csv`
+- hostis on fail tee all `<repo juurkataloog>/01-andmeinseneeria-alused/baastase/data/countries.csv`
 - andmebaasi konteineri sees on sama fail tee all `/data/countries.csv`
 
 Kirje `./data:/data` tähendab siin väga konkreetselt järgmist:
@@ -115,9 +115,15 @@ Seega:
 
 ## 1. Ava praktikumi kaust
 
-Liigu terminalis kausta `baastase/praktikum-01`.
+Liigu terminalis kausta `01-andmeinseneeria-alused/baastase`.
 
 Kui kasutad VS Code'i, siis lihtsaim tee on avada see kaust ja käivitada terminal otse sealt.
+
+Kui alustad repo juurkaustast, siis kasuta käsku:
+
+```bash
+cd 01-andmeinseneeria-alused/baastase
+```
 
 ## 2. Loo `.env` fail
 
@@ -148,10 +154,11 @@ Praegu ei ole vaja neid muuta.
 
 Enne käivitamist tasub aru saada, mida see fail teeb.
 
+- `env_file` ütleb, et `docker compose` loeb ühenduse väärtused failist `.env`
 - `image` määrab, milline andmebaasi pilt käivitatakse
 - `ports` seob konteineri pordi `5432` sinu arvuti pordiga `5432`
 - `volumes` teeb kaustad `data` ja `scripts` konteineris nähtavaks ning hoiab andmebaasi andmed alles
-- `network` tekib `docker compose`-iga automaatselt ja võimaldab konteineritel omavahel suhelda
+- eraldi `networks` plokki siin ei ole, sest `docker compose` loob vaikimisi sisevõrgu automaatselt
 - `healthcheck` kontrollib, kas andmebaas on valmis ühendusi vastu võtma
 
 Me kasutame siin `docker compose`-it, kuigi teenuseid on ainult üks. Põhjus on lihtne: nii on keskkond kirjas failis, mitte pika käsu sees.
@@ -251,7 +258,7 @@ Praegu piisab sellest, kui saad aru, et:
 
 ## 7. Vaata CSV-fail üle
 
-Ava fail `data/countries.csv` tekstiredaktoris. Esimesed read on sellised:
+Ava fail [`data/countries.csv`](./data/countries.csv) tekstiredaktoris. Esimesed read on sellised:
 
 ```csv
 id,name,capital,population,area_km2,continent
