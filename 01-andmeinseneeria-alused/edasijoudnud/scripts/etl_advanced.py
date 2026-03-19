@@ -8,6 +8,8 @@ import requests
 import psycopg2
 import os
 from dotenv import load_dotenv
+import time
+from datetime import datetime
 
 # See rida loeb .env faili sisu operatsioonisüsteemi muutujateks
 load_dotenv()
@@ -21,9 +23,6 @@ DB_CONFIG = {
     "password": os.environ["POSTGRES_PASSWORD"],
 }
 
-# API URL Euroopa riikide andmete jaoks
-API_URL = "https://restcountries.com/v3.1/region/europe?fields=name,capital,population,area"
-
 
 def extract():
     """
@@ -35,11 +34,22 @@ def extract():
         response = requests.get("https://mingi-api.com/andmed")
         data = response.json()  # tagastab Pythoni listi/dict'i
     """
-    # TODO: päri andmed API_URL-ist ja tagasta tulemus
-    response = requests.get("https://restcountries.com/v3.1/region/europe?fields=name,capital,population,area")
-    data = response.json()  # tagastab Pythoni listi/dict'i
 
-    return data
+    """
+    Pärib andmed Aasia ja Euroopa regioonide kohta ning tagastab need ühe listina.
+    """
+    urls = [
+        "https://restcountries.com/v3.1/region/asia?fields=name,capital,population,area,region",
+        "https://restcountries.com/v3.1/region/europe?fields=name,capital,population,area,region"
+    ]
+    all_data = []
+
+    for url in urls:
+        response = requests.get(url)
+        # Kasutame .extend(), et lisada listi elemendid, mitte listi ennast
+        all_data.extend(response.json())
+
+    return all_data
 
 
 def transform(raw_data):
@@ -72,12 +82,16 @@ def transform(raw_data):
 
         rahvaarv = item["population"]
         pindala = item["area"]
+        continent = item["region"]
+
+        # Arvutame tiheduse, vältides jagamist nulliga
+        tihedus = round(rahvaarv / pindala, 2) if pindala > 0 else 0
 
         # Lisame andmed tuple-ina listi
-        rows.append((nimi, pealinn, rahvaarv, pindala))
+        rows.append((nimi, pealinn, rahvaarv, pindala, tihedus, continent))
 
-    # Sorteeri tulemus rahvaarvu (indeks 2) järgi kahanevalt
-    rows.sort(key=lambda r: r[2], reverse=True)
+    # Sorteeri tulemus rahvastiku tiheduse (indeks 4) järgi kahanevalt
+    rows.sort(key=lambda r: r[4], reverse=True)
 
     return rows
 
@@ -107,29 +121,34 @@ def load(rows):
     try:
         # 1. Loo tabel õigete väljadega
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS europe_countries (
-                id SERIAL PRIMARY KEY,
+            CREATE TABLE IF NOT EXISTS population_density_ranking (
+                rank SERIAL PRIMARY KEY,
                 name TEXT,
                 capital TEXT,
                 population BIGINT,
                 area_km2 FLOAT,
+                density NUMERIC,
+                continent TEXT,               
                 loaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
         # 2. Idempotentsus: tühjenda tabel enne uute andmete lisamist
-        cur.execute("TRUNCATE TABLE europe_countries RESTART IDENTITY")
+        cur.execute("TRUNCATE TABLE population_density_ranking RESTART IDENTITY")
 
         # 3. Sisesta andmed (rows on list tuple'itest)
         # Kasutame %s märke, psycopg2 tegeleb andmetüüpidega ise
-        insert_query = """
-                       INSERT INTO europe_countries (name, capital, population, area_km2) VALUES (%s, %s, %s, %s)
-                       """
-        cur.executemany(insert_query, rows)
+        # Võtame ainult esimesed 20 rida (Top 20 tiheduse järgi)
+        top_rows = rows[:20]
+        insert_query = """INSERT INTO population_density_ranking (name, capital, population, area_km2, density, continent) VALUES (%s, %s, %s, %s, %s, %s) """
+        cur.executemany(insert_query, top_rows)
+
+        # Võta sisestatud ridade arv kätte siit:
+        rows_loaded = cur.rowcount
 
         # 4. Kinnita muudatused
         conn.commit()
-        print(f"Laadimine edukas: {len(rows)} rida lisatud.")
+        print(f"Laadimine edukas: {rows_loaded} rida lisatud.")
 
     except Exception as e:
         conn.rollback()
@@ -138,23 +157,60 @@ def load(rows):
         cur.close()
         conn.close()
 
+    return rows_loaded
+
+def save_etl_log(start_time, duration, rows, status):
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    cur.execute("""
+                    CREATE TABLE IF NOT EXISTS etl_log(
+                    id SERIAL PRIMARY KEY,
+                    start_time TIMESTAMP,
+                    duration_seconds FLOAT,
+                    rows_loaded INTEGER,
+                    status TEXT
+                    )
+                """)
+
+    cur.execute("""
+        INSERT INTO etl_log (start_time, duration_seconds, rows_loaded, status)
+        VALUES (%s, %s, %s, %s)
+    """, (start_time, duration, rows, status))
+    conn.commit()
+    cur.close()
+    conn.close()
+
 
 def main():
+    start_dt = datetime.now()
+    start_time = time.time()
+    status = "Success"
+    rows_count = 0
+
     print("=== ETL protsess ===\n")
 
-    # Extract
-    raw = extract()
-    print(f"Extracted: {len(raw)} kirjet\n")
+    try:
+        # Extract
+        raw = extract()
+        print(f"Extracted: {len(raw)} kirjet\n")
 
-    # Transform
-    rows = transform(raw)
-    print(f"Transformed: {len(rows)} rida\n")
+        # Transform
+        rows = transform(raw)
+        print(f"Transformed: {len(rows)} rida\n")
 
-    # Load
-    load(rows)
+        # Load
+        rows_count = load(rows)
 
-    print("\n=== ETL lõpetatud ===")
+    except Exception as e:
+        status = f"Failed: {str(e)}"
+        print(f"Viga: {e}")
+    finally:
+        duration = round(time.time() - start_time, 2)
 
+        # Logi salvestamine andmebaasi
+        save_etl_log(start_dt, duration, rows_count, status)
+        print(f"\n=== ETL lõpetatud ({status}, kestus: {duration}s) ===")
 
 if __name__ == "__main__":
     main()
