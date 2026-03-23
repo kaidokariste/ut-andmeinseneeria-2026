@@ -190,8 +190,8 @@ cur = conn.cursor()
 cur.execute("SELECT COUNT(*) FROM countries")
 print(f"Tabelis countries on {cur.fetchone()[0]} rida")
 
-cur.close()
-conn.close()
+# cur.close()
+# conn.close()
 ```
 
 **Andmete sisestamine tabelisse:**
