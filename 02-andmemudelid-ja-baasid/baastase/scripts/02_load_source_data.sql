@@ -12,5 +12,5 @@ TRUNCATE TABLE source_muuk;
     kogus,
     uhikuhind
 )
-FROM '/data/webipoe_muuk.csv'
+FROM '/data/veebipoe_muuk.csv'
 WITH (FORMAT csv, HEADER true);

@@ -1,5 +1,34 @@
 # Praktikum 2: Lihtne faktitabel ja kaks dimensiooni
 
+## Sisukord
+
+- [Praktikumi eesmärk](#praktikumi-eesmärk)
+- [Õpiväljundid](#õpiväljundid)
+- [Hinnanguline ajakulu](#hinnanguline-ajakulu)
+- [Eeldused](#eeldused)
+- [Enne alustamist](#enne-alustamist)
+- [Ava õige kaust](#1-ava-õige-kaust)
+- [Praktikumi failid](#praktikumi-failid)
+- [Kus need failid praktikumi ajal asuvad?](#kus-need-failid-praktikumi-ajal-asuvad)
+- [Miks see teema on oluline?](#miks-see-teema-on-oluline)
+- [Uued mõisted](#uued-mõisted)
+- [Tähtis vahe: terminal ja `psql`](#tähtis-vahe-terminal-ja-psql)
+- [1. Loo `.env` fail](#2-loo-env-fail)
+- [2. Käivita andmebaas](#3-käivita-andmebaas)
+- [3. Loo ühendus andmebaasiga](#4-loo-ühendus-andmebaasiga)
+- [4. Loo toorandmete tabel](#5-loo-toorandmete-tabel)
+- [5. Laadi CSV-fail toortabelisse](#6-laadi-csv-fail-toortabelisse)
+- [6. Uuri toorandmeid enne mudeli loomist](#7-uuri-toorandmeid-enne-mudeli-loomist)
+- [7. Loo tähtskeemi tabelid](#8-loo-tähtskeemi-tabelid)
+- [8. Täida dimensioonid ja faktitabel](#9-täida-dimensioonid-ja-faktitabel)
+- [9. Vaata, kuidas tähtskeem töötab](#10-vaata-kuidas-tähtskeem-töötab)
+- [10. Kirjuta esimesed analüütilised päringud](#11-kirjuta-esimesed-analüütilised-päringud)
+- [Kontrollpunktid](#kontrollpunktid)
+- [Levinud vead ja lahendused](#levinud-vead-ja-lahendused)
+- [Lühike kokkuvõte](#lühike-kokkuvõte)
+- [Lisaülesanne](#lisaülesanne)
+- [Koristamine](#koristamine)
+
 ## Praktikumi eesmärk
 
 Selle praktikumi eesmärk on teha esimene lihtne samm relatsioonilisest toorandmest dimensionaalse mudeli suunas. Laeme sisse väikese veebipoe müügiandmestiku, vaatame seda algsel kujul ning ehitame selle põhjal ühe lihtsa faktitabeli ja kaks dimensioonitabelit.
@@ -169,17 +198,21 @@ Get-Location
 
 ## Praktikumi failid
 
-Kõik allpool toodud relatiivsed failiteed eeldavad, et oled selles kaustas.
+Kõik allpool toodud relatiivsed failiteed eeldavad, et oled `02-andmemudelid-ja-baasid/baastase` kaustas.
 
 - [`compose.yml`](./compose.yml) kirjeldab praktikumi andmebaasikonteinerit
 - [`.env.example`](./.env.example) sisaldab ühenduse vaikimisi väärtusi
-- [`data/webipoe_muuk.csv`](./data/webipoe_muuk.csv) on praktikumi toorandmestik
+- [`data/veebipoe_muuk.csv`](./data/veebipoe_muuk.csv) on praktikumi toorandmestik
 - [`scripts/01_create_source_table.sql`](./scripts/01_create_source_table.sql) loob toorandmete tabeli
 - [`scripts/02_load_source_data.sql`](./scripts/02_load_source_data.sql) laadib CSV-faili tabelisse
 - [`scripts/03_create_star_schema.sql`](./scripts/03_create_star_schema.sql) loob dimensioonid ja faktitabeli
 - [`scripts/04_load_star_schema.sql`](./scripts/04_load_star_schema.sql) täidab dimensioonid ja faktitabeli
 - [`scripts/05_check_results.sql`](./scripts/05_check_results.sql) sisaldab kontrollpäringuid
 - [`scripts/99_reset.sql`](./scripts/99_reset.sql) kustutab praktikumi tabelid, kui soovid alustada uuesti
+- [`data/veebipoe_muuk_lisaulesanne.csv`](./data/veebipoe_muuk_lisaulesanne.csv) on lisaülesande rikkam toorandmestik
+- [`scripts/lisa_01_create_source_table_laiem.sql`](./scripts/lisa_01_create_source_table_laiem.sql) loob lisaülesande lähtetabeli
+- [`scripts/lisa_02_load_source_data_laiem.sql`](./scripts/lisa_02_load_source_data_laiem.sql) laadib lisaülesande CSV faili tabelisse
+- [`scripts/lisa_03_create_dim_kuupaev.sql`](./scripts/lisa_03_create_dim_kuupaev.sql) genereerib etteantud kuupäevavahemikust `dim_kuupaev` tabeli
 
 ## Kus need failid praktikumi ajal asuvad?
 
@@ -306,6 +339,8 @@ Praegu ei ole vaja neid muuta.
 
 ## 3. Käivita andmebaas
 
+See samm käib sinu arvuti (VS Code) või Codespace'i terminalis.
+
 ```bash
 docker compose up -d
 ```
@@ -320,12 +355,16 @@ Oodatav tulemus:
 
 - teenuse `db` olek on `running` või `healthy`
 
+Kui näed alguses olekut `starting`, oota mõni sekund ja käivita `docker compose ps` uuesti.
+
 Märkus:
 
 - selles praktikumis kasutame hosti pordi `5433`, mitte `5432`;
 - nii ei lähe see keskkond konflikti esimese praktikumi konteineriga, kui see on veel töös.
 
 ## 4. Loo ühendus andmebaasiga
+
+See samm algab sinu arvuti (VS Code) või Codespace'i terminalis ja lõpeb `psql` käsurea sees.
 
 Kasuta teadlikult seda teed, mis ei eelda sinu arvutisse eraldi `psql` paigaldust:
 
@@ -356,7 +395,9 @@ Loo ühendus seejärel uuesti.
 
 ## 5. Loo toorandmete tabel
 
-Käivita `psql` sees:
+See samm käib `psql` sees.
+
+Käivita:
 
 ```sql
 \i /scripts/01_create_source_table.sql
@@ -374,11 +415,13 @@ Oodatav tulemus:
 
 ## 6. Laadi CSV-fail toortabelisse
 
-Endiselt `psql` sees:
+See samm käib endiselt `psql` sees.
 
 ```sql
 \i /scripts/02_load_source_data.sql
 ```
+
+Kui laadimine õnnestub, näed tavaliselt väljundit `COPY 12`.
 
 Kontrolli, et andmed jõudsid kohale:
 
@@ -399,7 +442,11 @@ Oodatav tulemus:
 
 ## 7. Uuri toorandmeid enne mudeli loomist
 
-See samm aitab aru saada, miks me ei jäta kogu infot ühte laia tabelisse.
+See samm käib `psql` sees.
+
+See samm aitab näha, millist sündmust meie andmed tegelikult kirjeldavad.
+
+Modelleerimise eesmärk ei ole ainult dubleerimist vähendada. Eesmärk on teha mudel, millega on hiljem lihtsam esitada õigeid küsimusi ja raskem saada BI-tööriistas eksitavaid summasid.
 
 Proovi järgmisi päringuid:
 
@@ -426,11 +473,77 @@ Pane tähele:
 
 - kliendi info kordub mitmes reas;
 - toote info kordub mitmes reas;
-- mõõdetav sündmus on konkreetne müük, millel on kogus ja hind.
+- mõõdetav sündmus on konkreetne müük, millel on kogus ja ühikuhind.
 
-See on põhjus, miks loome eraldi dimensioonid ja faktitabeli.
+See ongi koht, kus dimensionaalne mudel on vaeva väärt. Me sõnastame selgelt, mida üks rida tähendab, ja paigutame kirjeldavad tunnused ning mõõdikud õigesse kohta.
+
+### Dimensionaalse modelleerimise neli sammu selles praktikumis
+
+Enne tabelite loomist tee endale selgeks neli otsust:
+
+1. Vali äriprotsess.
+   Selles praktikumis modelleerime veebipoe müüki.
+2. Deklareeri granulaarsus.
+   Üks rida kirjeldab ühe toote müüki ühel tellimusereal.
+3. Vali dimensioonid.
+   Selles praktikumis on nendeks klient ja toode.
+4. Vali faktid.
+   Selles praktikumis on nendeks kogus ja müügisumma.
+
+Oluline mõttepunkt:
+
+- päriselus võib sisendandmestik sisaldada korraga mitme granulaarsusega kirjeldavaid ja mõõdetavaid välju;
+- näiteks võib tellimuserea andmete kõrval olla ka tellimuse kogusumma või tarnekulu;
+- oma dimensiooni- ja faktitabelisse võtame ainult need tulbad, mis sobivad meie granulaarsuse lausega.
 
 ## 8. Loo tähtskeemi tabelid
+
+See samm käib `psql` sees.
+
+Järgmine SQL-fail loob tabelid nii, et need vastaksid eelmises sammus valitud äriprotsessile, granulaarsusele, dimensioonidele ja faktidele.
+
+Enne faili käivitamist pane tähele, milliseid välju me sellesse mudelisse üldse valime.
+
+### `dim_klient`: millised tulbad valime ja miks?
+
+`dim_klient` tabelisse võtame:
+
+- `kliendi_id`, et tunneksime sama kliendi allikast ära;
+- `kliendi_nimi`, sest see on kirjeldav tunnus;
+- `kliendityyp`, sest selle järgi võib hiljem andmeid rühmitada või filtreerida.
+
+Lisaks loob andmeladu sellele tabelile tehnilise võtme `klient_key`, mida kasutame hiljem faktitabelis.
+
+### `dim_toode`: millised tulbad valime ja miks?
+
+`dim_toode` tabelisse võtame:
+
+- `toote_kood`, et tunneksime sama toote allikast ära;
+- `toote_nimi`, sest see on kirjeldav tunnus;
+- `kategooria`, sest selle järgi saab hiljem andmeid rühmitada või filtreerida.
+
+Lisaks loob andmeladu sellele tabelile tehnilise võtme `toode_key`, mida kasutame hiljem faktitabelis.
+
+### `fact_muuk`: kuidas valime faktid?
+
+`fact_muuk` tabelisse jätame ainult selle müügisündmuse konteksti ja mõõdikud, mis sobivad meie granulaarsuse lausega:
+
+- `kuupaev`;
+- `tellimuse_nr`;
+- `klient_key`;
+- `toode_key`;
+- `kogus`;
+- `muugisumma`.
+
+`kuupaev`, `tellimuse_nr`, `klient_key` ja `toode_key` aitavad kirjeldada, millise müügisündmusega on tegu. `kogus` ja `muugisumma` on selle sündmuse mõõdikud, mida on hiljem mõistlik analüüsis kokku liita.
+
+Toorandmestikus on selle müügisündmuse kohta olemas `uhikuhind`. Faktitabelisse me ei tõsta seda välja eraldi ümber, vaid arvutame selle põhjal sündmuse koguväärtuse `muugisumma`. Nii salvestame faktitabelisse mõõdiku, mis vastab otse küsimusele "kui palju müüsime?" selle ühe tellimuserea tasemel.
+
+```sql
+    muugisumma = kogus * uhikuhind
+```
+
+See valik hoiab faktitabeli kooskõlas meie granulaarsuse lausega: üks rida kirjeldab ühe toote müüki ühel tellimusereal. Iga `fact_muuk` rida kannab nüüd selle ühe sündmuse kogust ja väärtust.
 
 Käivita:
 
@@ -452,6 +565,10 @@ Sa peaksid nüüd nägema vähemalt nelja praktikumi tabelit:
 - `fact_muuk`
 
 ## 9. Täida dimensioonid ja faktitabel
+
+See samm käib `psql` sees.
+
+Nüüd, kui tabelite kuju on paigas, täidame dimensioonid ja faktitabeli toorandmestikust.
 
 Käivita:
 
@@ -483,6 +600,8 @@ Oodatav tulemus:
 
 ## 10. Vaata, kuidas tähtskeem töötab
 
+See samm käib `psql` sees.
+
 Kontrollpäring, mis ühendab faktitabeli ja mõlemad dimensioonid:
 
 ```sql
@@ -507,6 +626,8 @@ Selle päringu tulemusest peaksid nägema:
 - dimensioonid annavad sellele sündmusele kirjeldava konteksti.
 
 ## 11. Kirjuta esimesed analüütilised päringud
+
+See samm käib `psql` sees.
 
 ### Päring 1: müük kategooriate kaupa
 
@@ -564,7 +685,18 @@ Praktikumi lõpuks peaksid sa suutma kontrollida vähemalt järgmist:
 
 ### Käsk ei tööta, sest oled vales kaustas
 
-Kontrolli oma asukohta.
+Sümptom:
+
+- terminalis käivitatud käsk ei leia faili või `docker compose` ei leia `compose.yml` faili.
+
+Tõenäoline põhjus:
+
+- oled vales kaustas.
+
+Lahendus:
+
+- kontrolli oma asukohta;
+- liigu vajadusel praktikumi kausta.
 
 macOS-is, Linuxis ja Codespacesis:
 
@@ -586,7 +718,17 @@ cd 02-andmemudelid-ja-baasid/baastase
 
 ### Docker ei käivitu
 
-Kontrolli:
+Sümptom:
+
+- `docker --version` või `docker compose up -d` ei tööta.
+
+Tõenäoline põhjus:
+
+- Docker ei ole selles keskkonnas saadaval või ei tööta.
+
+Lahendus:
+
+- kontrolli kõigepealt, kas Docker on selles keskkonnas kasutatav.
 
 ```bash
 docker --version
@@ -595,19 +737,46 @@ docker compose version
 
 Kui esimene käsk ei tööta, ei ole Docker veel selles keskkonnas kasutatav.
 
+Kui töötad oma arvutis ja ei saa Dockerit kiiresti tööle, siis kasuta selle praktikumi tegemiseks GitHub Codespacesit.
+
 ### Port on juba kinni
 
-See praktikum kasutab porti `5433`, et vältida konflikti esimese praktikumi konteineriga. Kui ka see port on kinni, vaata:
+Sümptom:
+
+- `docker compose up -d` annab veateate, et port on juba kasutuses.
+
+Tõenäoline põhjus:
+
+- mõni varasem konteiner kasutab juba sama porti.
+
+Lahendus:
+
+- vaata, millised teenused on praegu töös;
+- peata vajadusel vana praktikumikeskkond.
 
 ```bash
 docker compose ps
 ```
 
-ja vajadusel peata mõni vana keskkond.
+Kui esimese praktikumi konteiner on veel töös, ava esimese praktikumi kaust ja peata see käsuga:
+
+```bash
+docker compose down -v
+```
 
 ### Sisestasid `\i` käsu tavalisse terminali
 
-` \i /scripts/... ` töötab ainult `psql` sees.
+Sümptom:
+
+- sisestad `\i /scripts/...` käsu, aga see ei tööta.
+
+Tõenäoline põhjus:
+
+- `\i` töötab ainult `psql` sees, mitte tavalises terminalis.
+
+Lahendus:
+
+- loo kõigepealt ühendus andmebaasiga ja käivita `\i` seejärel `psql` sees.
 
 Kui näed tavalist shelli prompti, siis loo kõigepealt ühendus:
 
@@ -617,7 +786,17 @@ docker compose exec db psql -U praktikum -d praktikum
 
 ### `psql` näitab väljundit mitme leheküljena
 
-Kui ekraan jääb seisma ja all on näiteks `(END)`, vajuta:
+Sümptom:
+
+- ekraan jääb seisma ja all on näiteks `(END)`.
+
+Tõenäoline põhjus:
+
+- `psql` avas pika väljundi lehitsejas.
+
+Lahendus:
+
+- vajuta `q`, et väljundist tagasi tulla.
 
 ```text
 q
@@ -637,11 +816,91 @@ See on hea alus järgmisteks teemadeks, kus mudel muutub suuremaks ja valikud v�
 
 ## Lisaülesanne
 
-Kui jõuad varem valmis, proovi üks neist:
+Kui jõuad varem valmis, tee lisaülesanne kahe sammuna.
 
-- lisa `dim_kuupaev` tabel ja vii kuupäev faktitabelist eraldi dimensiooni;
-- lisa `muugikanal` toortabelisse uue väljana ja mõtle, kas see peaks olema faktitabelis või uues dimensioonis;
-- kirjuta päring, mis näitab iga kliendi ostude kogusummat.
+### Lisaülesanne 1: lisa `dim_kuupaev`
+
+Kui tahad harjutada ühte uut dimensiooni ilma kogu mudelit ümber tegemata, loo kõigepealt `dim_kuupaev`.
+
+Abiks on fail [`scripts/lisa_03_create_dim_kuupaev.sql`](./scripts/lisa_03_create_dim_kuupaev.sql).
+
+See skript:
+
+- genereerib kuupäevatabeli vahemikus `2025-09-01` kuni `2025-09-30`;
+- loob võtme `kuupaev_key`;
+- lisab mitu kirjeldavat tunnust, näiteks kuu, nädalanumbri, nädalapäeva nime ja tööpäeva tunnuse.
+
+Kui tahad kasutada teist kuupäevavahemikku, muuda failis skripti alguses väärtusi `algus_kuupaev` ja `lopp_kuupaev`.
+
+Proovi seejärel muuta oma mudelit nii, et faktitabel ei hoiaks enam otse välja `kuupaev`, vaid viitaks `kuupaev_key` kaudu tabelile `dim_kuupaev`.
+
+### Lisaülesanne 2: ehita uus tähtskeem rikkama toorandmestiku põhjal
+
+Kui tahad veidi suuremat modelleerimisülesannet, kasuta faili [`data/veebipoe_muuk_lisaulesanne.csv`](./data/veebipoe_muuk_lisaulesanne.csv).
+
+See andmestik on suurem kui põhiülesande CSV ja sisaldab lisaks:
+
+- kliendi linna;
+- toote tootemarki;
+- kampaania nime, tüüpi ja liiklusallikat;
+- makseviisi;
+- juba arvutatud müügisummat.
+
+Soovituslik tööjärjekord:
+
+1. Loo lähtetabel failiga [`scripts/lisa_01_create_source_table_laiem.sql`](./scripts/lisa_01_create_source_table_laiem.sql).
+2. Laadi andmed failiga [`scripts/lisa_02_load_source_data_laiem.sql`](./scripts/lisa_02_load_source_data_laiem.sql).
+3. Sõnasta uus granulaarsuse lause.
+4. Kavanda selle põhjal uus tähtskeem.
+
+Üks mõistlik lähtekoht on:
+
+- üks rida = ühe toote müük ühel tellimusereal ühe kampaania kaudu ühel kuupäeval
+
+Vihjed dimensioonide valikuks:
+
+- `dim_kuupaev`
+- `dim_klient`
+- `dim_toode`
+- `dim_kampaania`
+- `dim_makseviis`
+
+Vihjed faktide valikuks:
+
+- `kogus`
+- `muugisumma`
+
+Kui lood uuele mudelile teised tabelinimed, kohanda ka allolevates näidispäringutes tabelinimesid.
+
+Kui sinu mudel on hästi õnnestunud, peaksid sa saama kirjutada lühikesed ja loetavad päringud vähemalt kahele sellisele äriküsimusele:
+
+```sql
+SELECT
+    d.nadalapaev_nimi,
+    kp.kampaania_tyyp,
+    SUM(f.muugisumma) AS muuk_kokku
+FROM fact_muuk f
+JOIN dim_kuupaev d ON f.kuupaev_key = d.kuupaev_key
+JOIN dim_kampaania kp ON f.kampaania_key = kp.kampaania_key
+GROUP BY d.nadalapaev_nimi, kp.kampaania_tyyp
+ORDER BY kp.kampaania_tyyp, d.nadalapaev_nimi;
+```
+
+See päring kontrollib, kas kuupäeva- ja kampaaniadimensioonid töötavad.
+
+```sql
+SELECT
+    k.kliendityyp,
+    t.kategooria,
+    SUM(f.muugisumma) AS muuk_kokku
+FROM fact_muuk f
+JOIN dim_klient k ON f.klient_key = k.klient_key
+JOIN dim_toode t ON f.toode_key = t.toode_key
+GROUP BY k.kliendityyp, t.kategooria
+ORDER BY k.kliendityyp, muuk_kokku DESC;
+```
+
+See päring kontrollib, kas kliendi- ja tootedimensioonid töötavad ning kas müügisumma on õiges kohas faktitabelis.
 
 ## Koristamine
 
