@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS fact_muuk;
+DROP TABLE IF EXISTS dim_toode;
+DROP TABLE IF EXISTS dim_klient;
+DROP TABLE IF EXISTS source_muuk;

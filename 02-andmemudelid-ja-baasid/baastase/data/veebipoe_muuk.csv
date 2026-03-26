@@ -1,0 +1,13 @@
+tellimuse_nr,kuupaev,kliendi_id,kliendi_nimi,kliendityyp,toote_kood,toote_nimi,kategooria,kogus,uhikuhind
+T-1001,2026-02-01,K001,Anna Tamm,Era,T001,Kohvioad Espresso,Kohv,2,12.50
+T-1001,2026-02-01,K001,Anna Tamm,Era,T005,Filtrid 100tk,Tarvikud,1,4.20
+T-1002,2026-02-02,K002,Mari Kask,Era,T002,Rooibose tee,Tee,1,6.80
+T-1002,2026-02-02,K002,Mari Kask,Era,T006,Termokruus,Tarvikud,1,15.90
+T-1003,2026-02-03,K003,Buroo OU,Ettevote,T003,Must tee 50g,Tee,3,5.10
+T-1003,2026-02-03,K003,Buroo OU,Ettevote,T001,Kohvioad Espresso,Kohv,1,12.50
+T-1004,2026-02-03,K004,Juri Saar,Era,T004,Colombia oad,Kohv,2,13.20
+T-1005,2026-02-04,K005,Loomekeskus AS,Ettevote,T005,Filtrid 100tk,Tarvikud,4,4.20
+T-1005,2026-02-04,K005,Loomekeskus AS,Ettevote,T001,Kohvioad Espresso,Kohv,2,12.50
+T-1006,2026-02-05,K002,Mari Kask,Era,T004,Colombia oad,Kohv,1,13.20
+T-1007,2026-02-05,K001,Anna Tamm,Era,T002,Rooibose tee,Tee,2,6.80
+T-1007,2026-02-05,K001,Anna Tamm,Era,T003,Must tee 50g,Tee,1,5.10
